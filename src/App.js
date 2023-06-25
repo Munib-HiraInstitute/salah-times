@@ -131,7 +131,7 @@ const App = () => {
         <label>Timezone</label>
         <input type="text" value={timezone} onChange={(e) => handleChange(e, "timezone")}></input>
       </div>
-        {finished ? <span>Finished</span> : null}
+        {finished ? <span>Finished generating</span> : null}
         <button onClick={generate}>Generate data</button>
         {error ? <span>Error</span> : null}
         <button onClick={tryCopy}>Copy data</button>
