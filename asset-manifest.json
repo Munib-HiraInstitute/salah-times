@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/salah-times/static/css/main.a64739d4.css",
-    "main.js": "/salah-times/static/js/main.ef76ffe3.js",
+    "main.css": "/salah-times/static/css/main.7a59a089.css",
+    "main.js": "/salah-times/static/js/main.f9612f7c.js",
     "static/js/787.dd5b12d1.chunk.js": "/salah-times/static/js/787.dd5b12d1.chunk.js",
     "index.html": "/salah-times/index.html",
-    "main.a64739d4.css.map": "/salah-times/static/css/main.a64739d4.css.map",
-    "main.ef76ffe3.js.map": "/salah-times/static/js/main.ef76ffe3.js.map",
+    "main.7a59a089.css.map": "/salah-times/static/css/main.7a59a089.css.map",
+    "main.f9612f7c.js.map": "/salah-times/static/js/main.f9612f7c.js.map",
     "787.dd5b12d1.chunk.js.map": "/salah-times/static/js/787.dd5b12d1.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.a64739d4.css",
-    "static/js/main.ef76ffe3.js"
+    "static/css/main.7a59a089.css",
+    "static/js/main.f9612f7c.js"
   ]
 }
