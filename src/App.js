@@ -146,7 +146,6 @@ const App = () => {
 
   const tryCopy = () => {
     navigator.clipboard.writeText(output)
-    setFinished(false)
   }
 
   const toggleDst = () => {
