@@ -20,7 +20,8 @@ const formatForDst = (timeString, amount, timezone) => {
     : new Date("2000-01-01 " + timeString);
   time.setHours(time.getHours() + amount)
 
-  return formatInTimeZone(time, timezone, "HH:mm")
+  const dateFormatter = Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", hour12: true })
+  return dateFormatter.format(time).split(" ")[0]
 }
 
 const initialValues = {
@@ -89,7 +90,7 @@ const App = () => {
         const isha2 = times1.find(i => i.day === day).times.isha;
 
         const currentDate = parseDate(day);
-        const inDst = currentDate >= dstStart && currentDate <= dstEnd;
+        const inDst = currentDate >= Date.parse(dstStart) && currentDate <= Date.parse(dstEnd);
 
         const prayerTimes = new PrayerTimes(new Coordinates(latitude, longitude), currentDate, params);
 
