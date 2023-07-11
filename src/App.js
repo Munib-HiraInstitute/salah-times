@@ -1,26 +1,32 @@
 import './App.css';
 import { useState, useEffect } from 'react';
 import { Coordinates, CalculationMethod, PrayerTimes } from 'adhan';
+import { formatInTimeZone } from 'date-fns-tz';
 
-const params = CalculationMethod.MoonsightingCommittee();
-params.fajrAngle = 15;
+const params15 = CalculationMethod.MoonsightingCommittee();
+params15.fajrAngle = 15;
+params15.ishaAngle = 15;
+
+const params18 = CalculationMethod.MoonsightingCommittee();
+params18.fajrAngle = 18;
+params18.ishaAngle = 18;
 
 const getMonthNumber = monthAbbreviation => {
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
+
   return months.findIndex(month => month === monthAbbreviation);
 }
 
-const formatForDst = (timeString, amount) => {
+const formatForDst = (timeString, amount, timezone) => {
   const time = timeString instanceof Date
     ? timeString
     : new Date("2000-01-01 " + timeString);
   time.setHours(time.getHours() + amount)
 
-  const dateFormatter = Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", hour12: true })
-  return dateFormatter.format(time).split(" ")[0]
+  return formatInTimeZone(time, timezone, "hh:mm")
 }
 
 const createHeaders = headers => {
@@ -101,9 +107,10 @@ const App = () => {
         const currentDate = parseDate(day);
         const inDst = currentDate >= Date.parse(dstStart) && currentDate <= Date.parse(dstEnd);
 
-        const prayerTimes = new PrayerTimes(new Coordinates(latitude, longitude), currentDate, params);
+        const prayerTimes15 = new PrayerTimes(new Coordinates(latitude, longitude), currentDate, params15);
+        const prayerTimes18 = new PrayerTimes(new Coordinates(latitude, longitude), currentDate, params18);
 
-        if (isNaN(prayerTimes.asr)) {
+        if (isNaN(prayerTimes15.asr)) {
           setError(true)
           return {}
         }
@@ -112,12 +119,12 @@ const App = () => {
             day: day.substring(0,day.length - 4),
             asr_h: formatForDst(times.asr_h, +inDst && 1, timezone),
             asr_s: formatForDst(times.asr_s, +inDst && 1, timezone),
-            dhuhr: formatForDst(times.dhuhr, +inDst && 1, timezone),
-            fajr: formatForDst(prayerTimes.fajr, +inDst && 1, timezone),
+            dhuhr: formatForDst(prayerTimes15.dhuhr, +inDst && 1, timezone),
+            fajr: formatForDst(prayerTimes15.fajr, +inDst && 1, timezone),
             isha: formatForDst(times.isha, +inDst && 1, timezone),
             isha2: formatForDst(isha2, +inDst && 1, timezone),
             maghrib: formatForDst(times.maghrib, +inDst && 1, timezone),
-            suhoor: formatForDst(times.fajr, +inDst && 1, timezone),
+            suhoor: formatForDst(prayerTimes18.fajr, +inDst && 1, timezone),
         }
       }))
 
