@@ -13,6 +13,14 @@
   padding: 5px;
 }
 
+.Label {
+  padding-right: 10px;
+}
+
+button {
+  margin: 5px;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;

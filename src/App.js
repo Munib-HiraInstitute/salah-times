@@ -1,5 +1,5 @@
 import './App.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Coordinates, CalculationMethod, PrayerTimes } from 'adhan';
 import { formatInTimeZone } from 'date-fns-tz'
 
@@ -14,20 +14,57 @@ const getMonthNumber = monthAbbreviation => {
   return months.findIndex(month => month === monthAbbreviation);
 }
 
+const formatForDst = (timeString, amount, timezone) => {
+  const time = timeString instanceof Date
+    ? timeString
+    : new Date("2000-01-01 " + timeString);
+  time.setHours(time.getHours() + amount)
+
+  return formatInTimeZone(time, timezone, "HH:mm")
+}
+
+const initialValues = {
+  year: new Date().getFullYear() + 1,
+  latitude: "",
+  longitude: "",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  dstStart: `${new Date().getFullYear() + 1}-03-10`,
+  dstEnd: `${new Date().getFullYear() + 1}-11-03`
+}
+
 const App = () => {
   const [data, setData] = useState([]);
-  const [year, setYear] = useState(2024);
-  const [latitude, setLatitude] = useState(38.196510);
-  const [longitude, setLongitude] = useState(-85.654381);
-  const [timezone, setTimezone] = useState("EST");
+  const [formData, setFormData] = useState(initialValues);
+  const [useDst, setUseDst] = useState(true);
   const [finished, setFinished] = useState(false);
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(handlePosition)
+  }, [])
+
+  const handlePosition = e => {
+    if (e?.coords) {
+      setFormData(prev => ({
+        ...prev,
+        latitude: e.coords.latitude,
+        longitude: e.coords.longitude,
+      }))
+    }
+  }
+
+  const handleChange = e => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
 
   const parseDate = dateString => {
     const parts = dateString.split(' '); // Split the date string by space
     const month = getMonthNumber(parts[0]); // Get the month number
     const day = parseInt(parts[1], 10); // Get the day number
-    const date = new Date(year, month, day); // Create the Date object
+    const date = new Date(formData.year, month, day); // Create the Date object
   
     return date;
   }
@@ -37,8 +74,8 @@ const App = () => {
     setError(false);
 
     const fetchData = async () => {
-      const res1 = await fetch(`https://www.moonsighting.com/time_json.php?year=${year}&tz=${timezone}&lat=${latitude}&lon=${longitude}&method=1&both=true&time=1`);
-      const res2 = await fetch(`https://www.moonsighting.com/time_json.php?year=${year}&tz=${timezone}&lat=${latitude}&lon=${longitude}&method=2&both=true&time=1`);
+      const res1 = await fetch(`https://www.moonsighting.com/time_json.php?year=${formData.year}&tz=${formData.timezone}&lat=${formData.latitude}&lon=${formData.longitude}&method=1&both=true&time=1`);
+      const res2 = await fetch(`https://www.moonsighting.com/time_json.php?year=${formData.year}&tz=${formData.timezone}&lat=${formData.latitude}&lon=${formData.longitude}&method=2&both=true&time=1`);
 
       const data1 = await res1.json();
       const data2 = await res2.json();
@@ -48,23 +85,29 @@ const App = () => {
 
       setData(times2.map(item => {
         const { day, times } = item;
+        const { latitude, longitude, dstStart, dstEnd, timezone } = formData;
         const isha2 = times1.find(i => i.day === day).times.isha;
-        const prayerTimes = new PrayerTimes(new Coordinates(latitude, longitude), parseDate(day), params);
+
+        const currentDate = parseDate(day);
+        const inDst = currentDate >= dstStart && currentDate <= dstEnd;
+
+        const prayerTimes = new PrayerTimes(new Coordinates(latitude, longitude), currentDate, params);
+
         if (isNaN(prayerTimes.asr)) {
           setError(true)
-          return []
+          return {}
         }
 
         return {
             day: day.substring(0,day.length - 4),
-            asr_h: times.asr_h.split(" ")[0],
-            asr_s: times.asr_s.split(" ")[0],
-            dhuhr: times.dhuhr.split(" ")[0],
-            fajr: formatInTimeZone(prayerTimes.fajr, timezone, 'HH:mm'),
-            isha: times.isha.split(" ")[0],
-            isha2: isha2.split(" ")[0],
-            maghrib: times.maghrib.split(" ")[0],
-            suhoor: times.fajr.split(" ")[0]
+            asr_h: formatForDst(times.asr_h, +inDst && 1, timezone),
+            asr_s: formatForDst(times.asr_s, +inDst && 1, timezone),
+            dhuhr: formatForDst(times.dhuhr, +inDst && 1, timezone),
+            fajr: formatForDst(prayerTimes.fajr, +inDst && 1, timezone),
+            isha: formatForDst(times.isha, +inDst && 1, timezone),
+            isha2: formatForDst(isha2, +inDst && 1, timezone),
+            maghrib: formatForDst(times.maghrib, +inDst && 1, timezone),
+            suhoor: formatForDst(times.fajr, +inDst && 1, timezone),
         }
       }))
 
@@ -94,47 +137,56 @@ const App = () => {
     setFinished(false)
   }
 
-  const handleChange = (e, type) => {
-    switch (type) {
-      case "year":
-        setYear(e.target.value);
-        break;
-      case "latitude":
-        setLatitude(e.target.value);
-        break;
-      case "longitude":
-        setLongitude(e.target.value);
-        break;
-      case "timezone":
-        setTimezone(e.target.value);
-        break;
-      default:
-        break;
+  const toggleDst = () => {
+    const prev = useDst
+    setUseDst(!prev)
+    if (prev) {
+      setFormData(prev => ({
+        ...prev,
+        dstStart: "",
+        dstEnd: ""
+      }))
     }
   }
 
   return (
     <div className="App">
       <div className="Container">
-        <label>Year</label>
-        <input type="text" value={year} onChange={(e) => handleChange(e, "year")}></input>
+        <label className="Label">Year</label>
+        <input name="year" type="text" value={formData.year} onChange={handleChange}></input>
       </div>
       <div className="Container">
-        <label>Latitude</label>
-        <input type="text" value={latitude} onChange={(e) => handleChange(e, "latitude")}></input>
+        <label className="Label">Latitude</label>
+        <input name="latitude" type="text" value={formData.latitude} onChange={handleChange}></input>
       </div>
       <div className="Container">
-        <label>Longitude</label>
-        <input type="text" value={longitude} onChange={(e) => handleChange(e, "longitude")}></input>
+        <label className="Label">Longitude</label>
+        <input name="longitude" type="text" value={formData.longitude} onChange={handleChange}></input>
       </div>
       <div className="Container">
-        <label>Timezone</label>
-        <input type="text" value={timezone} onChange={(e) => handleChange(e, "timezone")}></input>
+        <label className="Label">Timezone</label>
+        <input name="timezone" type="text" value={formData.timezone} onChange={handleChange}></input>
       </div>
+      <div className="Container">
+        <label className="Label">Daylight savings</label>
+        <input name="useDst" type="checkbox" checked={useDst} onChange={toggleDst}></input>
+      </div>
+      {useDst && (
+        <>
+          <div className="Container">
+            <label className="Label">Start</label>
+            <input name="dstStart" type="date" value={formData.dstStart} onChange={handleChange}></input>
+          </div>
+          <div className="Container">
+            <label className="Label">End</label>
+            <input name="dstEnd" type="date" value={formData.dstEnd} onChange={handleChange}></input>
+          </div>
+        </>
+      )}
         {finished ? <span>Finished generating</span> : null}
-        <button onClick={generate}>Generate data</button>
         {error ? <span>Error</span> : null}
-        <button onClick={tryCopy}>Copy data</button>
+        <button onClick={generate}>Generate data</button>
+        {finished ? <button onClick={tryCopy}>Copy data</button> : null}
     </div>
   );
 }
