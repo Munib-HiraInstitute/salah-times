@@ -36,9 +36,9 @@ const App = () => {
     setError(false);
 
     const fetchData = async () => {
-      const res15 = await fetch(`http://api.aladhan.com/v1/calendar/${formData.year}?latitude=${formData.latitude}&longitude=${formData.longitude}&method=99&methodSettings=15,null,15&iso8601=true`);
-      const res18 = await fetch(`http://api.aladhan.com/v1/calendar/${formData.year}?latitude=${formData.latitude}&longitude=${formData.longitude}&method=99&methodSettings=18,null,18&iso8601=true`);
-      const resasr = await fetch(`http://api.aladhan.com/v1/calendar/${formData.year}?latitude=${formData.latitude}&longitude=${formData.longitude}&method=99&methodSettings=18,null,18&iso8601=true&school=1`);
+      const res15 = await fetch(`https://api.aladhan.com/v1/calendar/${formData.year}?latitude=${formData.latitude}&longitude=${formData.longitude}&method=99&methodSettings=15,null,15&iso8601=true`);
+      const res18 = await fetch(`https://api.aladhan.com/v1/calendar/${formData.year}?latitude=${formData.latitude}&longitude=${formData.longitude}&method=99&methodSettings=18,null,18&iso8601=true`);
+      const resasr = await fetch(`https://api.aladhan.com/v1/calendar/${formData.year}?latitude=${formData.latitude}&longitude=${formData.longitude}&method=99&methodSettings=18,null,18&iso8601=true&school=1`);
 
       const data15 = await res15.json();
       const data18 = await res18.json();
